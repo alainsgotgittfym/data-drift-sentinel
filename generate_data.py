@@ -18,7 +18,7 @@ engine = create_engine(DATABASE_URL)
 
 def generate_baseline_data(n_samples=1000):
     """Генерация эталонных данных (Baseline)"""
-    np.random.seed(42) 
+    np.random.seed(42)  
 
     age = np.random.normal(loc=35, scale=10, size=n_samples).clip(18, 70)
     income = np.random.normal(loc=50000, scale=15000, size=n_samples).clip(
@@ -64,10 +64,24 @@ def main():
     df_target = generate_drifted_data()
 
     print("Запись baseline_data в базу данных...")
-    df_baseline.to_sql("baseline_data", engine, if_exists="replace", index=False)
+    df_baseline.to_sql(
+        "baseline_data",
+        engine,
+        if_exists="replace",
+        index=False,
+        method="multi",
+        chunksize=500,
+    )
 
     print("Запись target_data в базу данных...")
-    df_target.to_sql("target_data", engine, if_exists="replace", index=False)
+    df_target.to_sql(
+        "target_data",
+        engine,
+        if_exists="replace",
+        index=False,
+        method="multi",
+        chunksize=500,
+    )
 
     print("Данные успешно сгенерированы и сохранены в PostgreSQL!")
 
