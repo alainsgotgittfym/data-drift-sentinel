@@ -16,54 +16,29 @@ DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NA
 engine = create_engine(DATABASE_URL)
 
 
-def generate_baseline_data(n_samples=1000):
-    """Генерация эталонных данных (Baseline)"""
-    np.random.seed(42)  
-
-    age = np.random.normal(loc=35, scale=10, size=n_samples).clip(18, 70)
-    income = np.random.normal(loc=50000, scale=15000, size=n_samples).clip(
-        15000, 150000
-    )
-    score = np.random.uniform(1, 100, size=n_samples)
-
-    df = pd.DataFrame(
-        {
-            "user_id": range(1, n_samples + 1),
-            "age": np.round(age, 1),
-            "income": np.round(income, 2),
-            "score": np.round(score, 1),
-        }
-    )
-    return df
+def generate_baseline_data(n_samples=5000):
+    np.random.seed(42)
+    data = {
+        "age": np.random.normal(loc=35, scale=10, size=n_samples),
+        "income": np.random.normal(loc=50000, scale=15000, size=n_samples),
+        "score": np.random.uniform(low=0, high=100, size=n_samples),
+    }
+    return pd.DataFrame(data)
 
 
-def generate_drifted_data(n_samples=1000):
-    """Генерация новых данных со сдвигом (Current/Drifted)"""
+def generate_target_data(n_samples=5000):
     np.random.seed(100)
-
-    age = np.random.normal(loc=42, scale=12, size=n_samples).clip(18, 70)
-    income = np.random.normal(loc=65000, scale=20000, size=n_samples).clip(
-        15000, 200000
-    )
-    score = np.random.uniform(1, 100, size=n_samples)
-
-    df = pd.DataFrame(
-        {
-            "user_id": range(1001, 1001 + n_samples),
-            "age": np.round(age, 1),
-            "income": np.round(income, 2),
-            "score": np.round(score, 1),
-        }
-    )
-    return df
+    data = {
+        "age": np.random.normal(loc=42, scale=12, size=n_samples),
+        "income": np.random.normal(loc=65000, scale=18000, size=n_samples),
+        "score": np.random.uniform(low=0, high=100, size=n_samples),
+    }
+    return pd.DataFrame(data)
 
 
 def main():
-    print("Генерация данных...")
+    print("Генерация baseline данных...")
     df_baseline = generate_baseline_data()
-    df_target = generate_drifted_data()
-
-    print("Запись baseline_data в базу данных...")
     df_baseline.to_sql(
         "baseline_data",
         engine,
@@ -73,7 +48,8 @@ def main():
         chunksize=500,
     )
 
-    print("Запись target_data в базу данных...")
+    print("Генерация target данных...")
+    df_target = generate_target_data()
     df_target.to_sql(
         "target_data",
         engine,
@@ -83,7 +59,7 @@ def main():
         chunksize=500,
     )
 
-    print("Данные успешно сгенерированы и сохранены в PostgreSQL!")
+    print("Данные успешно сгенерированы и загружены в БД.")
 
 
 if __name__ == "__main__":
